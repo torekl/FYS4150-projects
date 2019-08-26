@@ -17,6 +17,8 @@ h = 1/(n+1)
 
 plt.figure()
 plt.plot(np.log10(h),np.log10(rel_err))
+plt.xlabel('log10(h)')
+plt.ylabel('log10(Relative error)')
 plt.savefig('error_plot.pdf')
 
 outfile = open('rel_error_log','w')
