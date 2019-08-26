@@ -75,8 +75,15 @@ int main(int argc, char *argv[]){
       }
     }
     else if (solution_method == 2){
-      cout << "Under construction!" << endl;
-      exit(1);
+      for (int i = 2; i <= n; i++){
+        double b_inv = 1/b[i-1];
+        b[i] -= b_inv;
+        g[i] += g[i-1]*b_inv;
+      }
+      g[n] /= b[n];
+      for (int i=n-1; i >= 1; i--){
+        g[i] = (g[i]+g[i+1])/b[i];  //solution
+      }
     }
     finish = clock();
     t[m-1] = (finish-start)/double(CLOCKS_PER_SEC);
