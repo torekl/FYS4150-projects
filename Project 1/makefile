@@ -1,5 +1,5 @@
 CC= c++ -Wall
-PROG= GeneralTridiagonal
+PROG= Tridiagonal
 ${PROG} :					${PROG}.o
 									${CC} ${PROG}.o -o ${PROG}
 ${PROG}.o :       ${PROG}.cpp

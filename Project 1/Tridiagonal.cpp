@@ -13,16 +13,23 @@ inline double f(double x){return 100.0*exp(-10.0*x);}
 inline double u_analytic(double x){return (exp(-10.0)-1.0)*x+1.0-exp(-10.0*x);}
 
 int main(int argc, char *argv[]){
-  int max_m;     //maximum value of m (n = 10^m)
-  string fname;  //beginning of filename; filenames will be "fname_m"
-  if(argc <= 2){
-    cout << "No filename and/or m; read filename and max. value of m (n=10^m) "
-    "on the same line" << endl;
+  int max_m;            //maximum value of m (n = 10^m)
+  string fname;         //beginning of filename; filenames will be "fname_m"
+  int solution_method;  //1 for general method, 2 for special case
+  if(argc <= 3){
+    cout << "No filename, m and/or solution method; read filename, max. " "value of m (n=10^m) and solution method (1 for general case, 2 for "
+    "special) on the same line." << endl;
+    exit(1);
+  }
+  else if (atoi(argv[3]) != 1 and atoi(argv[3]) != 2){
+    cout << "Invalid value for solution method; input 1 for general case, "
+    "2 for special." << endl;
     exit(1);
   }
   else{
     fname = argv[1];
     max_m = atoi(argv[2]);
+    solution_method = atoi(argv[3]);
   }
   double *t = new double[max_m];           //Time per n
   double *max_rel_err = new double[max_m]; //Maximum rel. error per n
@@ -55,17 +62,22 @@ int main(int argc, char *argv[]){
     }
     g[0] = g[n+1] = 0.;         //Boundary conditions on u(x)
     u[0] = u[n+1] = 0.;         //Removes round-off error in analytic expression
-    //Solving the equation:
-    for (int i = 2; i <= n; i++){
-      double a_b = a[i-1]/b[i-1];
-      b[i] -= a_b*c[i-1];
-      g[i] -= a_b*g[i-1];
+    //Solving the equation (with either method):
+    if (solution_method == 1){
+      for (int i = 2; i <= n; i++){
+        double a_b = a[i-1]/b[i-1];
+        b[i] -= a_b*c[i-1];
+        g[i] -= a_b*g[i-1];
+      }
+      g[n] /= b[n];
+      for (int i=n-1; i >= 1; i--){
+        g[i] = (g[i]-c[i]*g[i+1])/b[i];  //solution
+      }
     }
-    g[n] /= b[n];
-    for (int i=n-1; i >= 1; i--){
-      g[i] = (g[i]-c[i]*g[i+1])/b[i];  //solution
+    else if (solution_method == 2){
+      cout << "Under construction!" << endl;
+      exit(1);
     }
-
     finish = clock();
     t[m-1] = (finish-start)/double(CLOCKS_PER_SEC);
     double *rel_err = new double[n+2];
