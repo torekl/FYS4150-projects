@@ -1,0 +1,78 @@
+\documentclass[a4paper,english]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc,url}
+\usepackage{babel,textcomp}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{verbatim}
+\usepackage{subfig}
+\usepackage{bm}
+\usepackage{mathtools}
+\usepackage{dsfont}
+\usepackage{gensymb}
+\urlstyle{sf}
+\def\doubleunderline#1{\underline{\underline{#1}}}
+\def\unit#1{\vec{\hat{#1}}}
+\renewcommand\vec{\mathbf}
+\newcommand\Nabla{\boldsymbol{\nabla}}
+\newcommand\norm[1]{\left\lvert#1\right\rvert}
+\newcommand\Res[1]{\text{Res}\left(#1\right)}
+\let\originalleft\left
+\let\originalright\right
+\renewcommand{\left}{\mathopen{}\mathclose\bgroup\originalleft}
+\renewcommand{\right}{\aftergroup\egroup\originalright}
+\makeatletter
+\newcommand{\RN}[1]{\expandafter\@slowromancap\romannumeral #1@}
+\makeatother
+\allowdisplaybreaks
+\title{FYS4150 - Project 1: Differential Equations and Linear Algebra}
+\author{Tore Klungland (torekl)}
+\begin{document}
+\maketitle
+\section{Introduction}
+Poisson's equation, given in general as
+\begin{equation}
+  \nabla^2 u\left(\vec{r}\right) = f\left(\vec{r}\right)
+  \label{eq:poisson}
+\end{equation}
+where $f\left(\vec{r}\right)$ is some known function, is an often-used equation in physics as it describes how a field (in this case $u$) is affected by some source (in this case $f$). If $f$ is a complicated function this equation may not be analytically solvable, so one must use numerical methods methods instead, to find an approximate solution. In one dimension this can be done by using an approximate expression for the second derivative of $u$ at discrete set of points; then equation \ref{eq:poisson} becomes a set of linear equations for the values of $u$ at these points, which can be expressed as a matrix involving a tridiagonal matrix. Thus the problem of solving Poisson's equation numerically reduces to inverting such an equation numerically. \par
+In this project I have examined three different methods for solving this matrix equation: One "brute-force" method which inverts the entire matrix numerically, and two which exploit the fact that the matrix is tridiagonal by storing data in vectors instead of a matrix, which reduces memory usage. One of these uses a general algorithm for row-reducing tridiagonal matrices, while the other takes advantage of the specific form of the matrix in question. In this text I will first outline these methods, and then compare their results, in particular the difference in CPU time used. I will also discuss the effects of round-off errors as the step size between the different data points is changed.
+\section{Methods}
+\subsection{Turning the Poisson equation into a matrix equation}
+The target of this project was solving Poisson's equation,
+\begin{equation}
+  u''\left(x\right) = -f\left(x\right)\text{,}
+  \label{eq:poisson1d}
+\end{equation}
+for $f\left(x\right) = 100e^{-10x}$ for $x\in \left[0,1\right]$ with the boundary conditions $u\left(0\right) = u\left(1\right) = 0$. This equation has an exact solution given by \cite{assignment}
+\begin{equation}
+  u\left(x\right) = \left(e^{-10}-1\right)x+1-e^{-10x}
+  \label{eq:u_exact}
+\end{equation}
+The first step is dividing this interval into a discrete set of points $x_i$ for $i = 0,1,2,\dots,n+1$, where $x_0 = 0$ and $x_{n+1} = 1$. Thus the step size is given by $h = x_{i+1}-x_i = 1/\left(n+1\right)$. The second derivative can be approximated by \cite{lecturenotes}
+\begin{equation}
+  u''_i \approx \frac{u_{i-1}-2u_i+u_{i+1}}{h^2}
+\end{equation}
+(obtained by manipulating the Taylor expansion of $u\left(x\right)$) where the error is of order $h^2$. Here $u_i \equiv u\left(x_i\right)$, etc. Inserting this into equation \ref{eq:poisson1d} gives
+\begin{equation*}
+  -u_{i-1}+2u_i-u_{i+1} = g_i
+\end{equation*}
+where I have defined $g_i \equiv h^2f\left(x_i\right)$. This is a set of linear equations for $u_i$; it can thus be rewritten on matrix form as (using the fact that $u_0 = u_{n+1} = 0$, by the boundary conditions):
+\begin{equation}
+  A \vec{u} = \vec{g}
+  \label{eq:matrix_eq}
+\end{equation}
+Here $A$ is a matrix whose non-zero elements on the $i$'th row are $A_{i,i-1} = -1$, $A_{i,i} =2$, $A_{i,i+1} = -1$ (except the first row which only has $A_{0,0} = 2$ and $A_{0,1} = -1$, and the $n$'th row which only has $A_{n,n-1} = -1$ and $A_{n,n} = 2$). Thus it is a tridiagonal matrix with 2 on the diagonal and $-1$ on the elements directly adjacent to the diagonal. Furthermore $\vec{u}^T \equiv \left[u_1,u_2,\dots,u_n\right]$, and $\vec{g}^T \equiv \left[g_1,g_2,\dots,g_n\right]$.
+\begin{thebibliography}{}
+  \bibitem{assignment}
+    Assignment text for project 1 in FYS3150/FYS4150,
+    Dept. of Physics, University of Oslo, Norway
+
+  \bibitem{lecturenotes}
+    Hjorth-Jensen, Morten,
+    2015,
+    Computational Physics - lecture notes
+\end{thebibliography}
+\end{document}
