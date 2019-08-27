@@ -26,5 +26,6 @@ for m in range(1,4):
     plt.plot(xm,err,'C2',label = 'Error')
     plt.xlabel('x')
     plt.ylabel('Numerical-exact solution')
+    plt.tight_layout()
     plt.figlegend()
     plt.savefig('general_plot_%d.pdf' % m)
