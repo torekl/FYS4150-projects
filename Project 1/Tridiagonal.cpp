@@ -38,53 +38,62 @@ int main(int argc, char *argv[]){
     string outfile = fname;
     outfile.append("_"+to_string(m));
 
-    //Setup of variables. All arrays are set to length n+2 for convenience;
-    //for a, b, and c elements 0 and n+1 are not used (element n is not used
-    //either for a and c)
+    //Setup of variables. All arrays are set to length n+2 for convenience,
+    //(so that the relevant elements have indices 1-n)even though for some
+    //the first/last elements are not used
     clock_t start, finish;
-    start = clock();
-
     double h = 1.0/(n+1);                  //step size
     double h2 = h*h;
     double *a = new double[n+2];       //"below" diagonal
     double *b = new double[n+2];       //diagonal
     double *c = new double[n+2];       //"above" diagonal
     double *x = new double[n+2];
-    double *g = new double[n+2];       //numerical solution, initially equal
-                                       //to h^2*f(x_i) for i=1,2,...,n
-    double *u = new double[n+2];       //exact solution
+    double *g = new double[n+2];       //h^2*f(x_i) for i=1,2,...,n
+    double *u_exact = new double[n+2]; //exact solution
+    double *b_new = new double[n+2];
+    double *g_new = new double[n+2];
+    double *u_num = new double[n+2];
     for (int i = 0; i <= n+1; i++){
       x[i] = i*h;
-      u[i] = u_analytic(x[i]);
+      u_exact[i] = u_analytic(x[i]);
       a[i] = c[i] = -1.;
       b[i] = 2.;
       g[i] = h2*f(x[i]);
     }
-    g[0] = g[n+1] = 0.;         //Boundary conditions on u(x)
-    u[0] = u[n+1] = 0.;         //Removes round-off error in analytic expression
+    u_num[0] = u_num[n+1] = 0.;
+    u_exact[0] = u_exact[n+1] = 0.;    //Removes round-off error
+                                       //in analytic expression
     //Solving the equation (with either method):
+    //General tridiagonal solver:
     if (solution_method == 1){
+      b_new[1] = b[1]; g_new[1] = g[1];
+      start = clock();
       for (int i = 2; i <= n; i++){
-        double a_b = a[i-1]/b[i-1];
-        b[i] -= a_b*c[i-1];
-        g[i] -= a_b*g[i-1];
+        double a_b = a[i-1]/b_new[i-1];
+        b_new[i] = b[i] - a_b*c[i-1];
+        g_new[i] = g[i] - a_b*g_new[i-1];
       }
-      g[n] /= b[n];
+      u_num[n] = g_new[n]/b_new[n];
       for (int i=n-1; i >= 1; i--){
-        g[i] = (g[i]-c[i]*g[i+1])/b[i];  //solution
+        u_num[i] = (g_new[i]-c[i]*u_num[i+1])/b_new[i];  //solution
       }
     }
+    //Specialized tridiagonal solver
     else if (solution_method == 2){
+      for (int i = 1; i <= n; i++) b_new[i] = (i+1.)/i;
+      g_new[1] = g[1];
+      start = clock();
       for (int i = 2; i <= n; i++){
-        double b_inv = 1/b[i-1];
-        b[i] -= b_inv;
-        g[i] += g[i-1]*b_inv;
+        g_new[i] = g[i] + g_new[i-1]/b_new[i-1];
       }
-      g[n] /= b[n];
+      u_num[n] = g_new[n]/b_new[n];
       for (int i=n-1; i >= 1; i--){
-        g[i] = (g[i]+g[i+1])/b[i];  //solution
+        u_num[i] = (g_new[i]+u_num[i+1])/b_new[i];  //solution
       }
     }
+    else start = clock(); //to make the compiler shut up about start being
+                          //unused if neither if statement were true (which
+                          //I assured earlier in the program that they would)
     finish = clock();
     t[m-1] = (finish-start)/double(CLOCKS_PER_SEC);
     double *rel_err = new double[n+2];
@@ -95,12 +104,12 @@ int main(int argc, char *argv[]){
       ofile << "             x:   Numerical solution:  "
       "Exact solution:  Absolute error:  Relative error:" << endl;
       for (int i = 0; i <= n+1; i++){
-        double err = g[i]-u[i];
+        double err = u_num[i]-u_exact[i];
         if(err == 0.) rel_err[i] = 0.;
-        else rel_err[i] = fabs(err)/u[i];
+        else rel_err[i] = fabs(err)/u_exact[i];
         ofile << setw(15) << setprecision(8) << x[i];
-        ofile << setw(22) << setprecision(8) << g[i];
-        ofile << setw(17) << setprecision(8) << u[i];
+        ofile << setw(22) << setprecision(8) << u_num[i];
+        ofile << setw(17) << setprecision(8) << u_exact[i];
         ofile << setw(17) << setprecision(8) << err;
         ofile << setw(17) << setprecision(8) << rel_err[i] << endl;
       }
@@ -108,15 +117,16 @@ int main(int argc, char *argv[]){
     }
     else{
       for (int i = 0; i <= n+1; i++){
-        double err = g[i]-u[i];
+        double err = u_num[i]-u_exact[i];
         if(err == 0.) rel_err[i] = 0.;
-        else rel_err[i] = fabs(err)/u[i];
+        else rel_err[i] = fabs(err)/u_exact[i];
     }}
     //Find maximum relative error for this n:
     max_rel_err[m-1] = *max_element(rel_err, rel_err + n+2);
 
     delete [] a; delete [] b; delete [] c;
-    delete [] x; delete [] g; delete [] u;
+    delete [] x; delete [] g; delete [] u_exact;
+    delete [] b_new; delete [] g_new; delete [] u_num;
     }
   //Writing times to file:
   ofile.open(fname+"_time");
