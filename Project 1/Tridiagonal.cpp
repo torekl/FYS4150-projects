@@ -1,10 +1,12 @@
 #include <iostream>
+#include <armadillo>
 #include <fstream>
 #include <iomanip>
 #include <cmath>
 #include <string>
 #include "time.h"
 using namespace std;
+using namespace arma;
 
 ofstream ofile;
 
@@ -17,13 +19,9 @@ int main(int argc, char *argv[]){
   string fname;         //beginning of filename; filenames will be "fname_m"
   int solution_method;  //1 for general method, 2 for special case
   if(argc <= 3){
-    cout << "No filename, m and/or solution method; read filename, max. " "value of m (n=10^m) and solution method (1 for general case, 2 for "
-    "special) on the same line." << endl;
-    exit(1);
-  }
-  else if (atoi(argv[3]) != 1 and atoi(argv[3]) != 2){
-    cout << "Invalid value for solution method; input 1 for general case, "
-    "2 for special." << endl;
+    cout << "No filename, m and/or solution method; read filename, max. "
+    "value of m (n=10^m) and solution method (1 for general tridiagonal "
+    "case, 2 for special, 3 for LU decomp.) on the same line." << endl;
     exit(1);
   }
   else{
@@ -64,6 +62,7 @@ int main(int argc, char *argv[]){
     u_exact[0] = u_exact[n+1] = 0.;    //Removes round-off error
                                        //in analytic expression
     //Solving the equation (with either method):
+
     //General tridiagonal solver:
     if (solution_method == 1){
       b_new[1] = b[1]; g_new[1] = g[1];
@@ -78,7 +77,8 @@ int main(int argc, char *argv[]){
         u_num[i] = (g_new[i]-c[i]*u_num[i+1])/b_new[i];  //solution
       }
     }
-    //Specialized tridiagonal solver
+
+    //Specialized tridiagonal solver:
     else if (solution_method == 2){
       for (int i = 1; i <= n; i++) b_new[i] = (i+1.)/i;
       g_new[1] = g[1];
@@ -91,9 +91,35 @@ int main(int argc, char *argv[]){
         u_num[i] = (g_new[i]+u_num[i+1])/b_new[i];  //solution
       }
     }
-    else start = clock(); //to make the compiler shut up about start being
-                          //unused if neither if statement were true (which
-                          //I assured earlier in the program that they would)
+
+    //LU decomposition:
+    else if (solution_method == 3){
+      mat A(n,n);
+      mat L, U, P;
+      vec g_vec(n);
+      //setup of A and g:
+      for (int i = 0; i <= n-1; i++){
+        for (int j = 0; j <= n-1; j++){
+          if (i == j) A(i,j) = 2.;
+          else if (i == j + 1 or i == j - 1) A(i,j) = -1.;
+          else A(i,j) = 0;
+        }
+        g_vec[i] = g[i+1];
+      }
+      start = clock();
+      lu(L, U, P, A);
+      //if (n == 1) cout << P << endl;
+      vec y = solve(L,g_vec);
+      vec solution = solve(U,y);
+      for (int i = 1; i <= n; i++){
+        u_num[i] = solution[i-1];
+      }
+    }
+    else{
+      cout << "Invalid value for solution method; input 1 for general "
+      "tridiagonal case, 2 for special, 3 for LU decomp." << endl;
+      exit(1);
+    }
     finish = clock();
     t[m-1] = (finish-start)/double(CLOCKS_PER_SEC);
     double *rel_err = new double[n+2];
@@ -134,7 +160,7 @@ int main(int argc, char *argv[]){
   ofile << "  n:           t [s]:" << endl;
   for (int m=1; m <=  max_m; m++){
     ofile << "10^" << m;
-    ofile << setw(16) << setprecision(8) << t[m-1] << endl;
+    ofile << setw(16) << setprecision(6) << t[m-1] << endl;
   }
   ofile.close();
   //Writing relative errors to file:
