@@ -9,3 +9,9 @@
 *.snm
 *.vrb
 *.DS_Store
+
+*.cflags
+*.config
+*.cxxflags
+*.files
+*.includes
