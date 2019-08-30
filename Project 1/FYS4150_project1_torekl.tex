@@ -64,7 +64,75 @@ where I have defined $g_i \equiv h^2f\left(x_i\right)$. This is a set of linear 
   A \vec{u} = \vec{g}
   \label{eq:matrix_eq}
 \end{equation}
-Here $A$ is a matrix whose non-zero elements on the $i$'th row are $A_{i,i-1} = -1$, $A_{i,i} =2$, $A_{i,i+1} = -1$ (except the first row which only has $A_{0,0} = 2$ and $A_{0,1} = -1$, and the $n$'th row which only has $A_{n,n-1} = -1$ and $A_{n,n} = 2$). Thus it is a tridiagonal matrix with 2 on the diagonal and $-1$ on the elements directly adjacent to the diagonal. Furthermore $\vec{u}^T \equiv \left[u_1,u_2,\dots,u_n\right]$, and $\vec{g}^T \equiv \left[g_1,g_2,\dots,g_n\right]$.
+Here $A$ is an $n\times n$ matrix whose non-zero elements on the $i$'th row are $A_{i,i-1} = -1$, $A_{i,i} =2$, $A_{i,i+1} = -1$ (except the first row which only has $A_{0,0} = 2$ and $A_{0,1} = -1$, and the $n$'th row which only has $A_{n,n-1} = -1$ and $A_{n,n} = 2$). Thus it is a tridiagonal matrix with 2 on the diagonal and $-1$ on the elements directly adjacent to the diagonal. Furthermore $\vec{u}^T \equiv \left[u_1,u_2,\dots,u_n\right]$, and $\vec{g}^T \equiv \left[g_1,g_2,\dots,g_n\right]$.
+\subsection{Row-reducing a tridiagonal matrix}
+The problem is now finding the reduces row echelon form of the matrix
+\begin{equation}
+  \left[A;\vec{g}\right] =
+  \begin{bmatrix}
+    b_1& c_1 & 0 &\dots   & \dots &\dots & g_1\\
+    a_1 & b_2 & c_2 &\dots &\dots &\dots & g_2\\
+    \dots & a_2 & b_3 & c_3 & \dots & \dots & g_3\\
+    \dots & \dots   & \dots &\dots &\dots & \dots & \dots\\
+    \dots & \dots & \dots &a_{n-2} &b_{n-1}& c_{n-1} & g_{n-1}\\
+    \dots & \dots & \dots & \dots &a_{n-1} & b_n & g_n\\
+  \end{bmatrix}
+\end{equation}
+For the moment, I am not making any assumptions about the values of $a_i$, $b_i$ or $c_i$. Renaming $b_1$ and $g_1$ to $\tilde{b}_1$ and $\tilde{g}_1$ respectively, and then subtracting $a_1/\tilde{b}_1\times \text{(row 1)}$ from the second row leaves
+\begin{equation}
+  \begin{bmatrix}
+    \tilde{b}_1& c_1 & 0 &\dots   & \dots &\dots & \tilde{g}_1\\
+    0 & \tilde{b}_2 & c_2 &\dots &\dots &\dots & \tilde{g}_2\\
+    \dots & a_2 & b_3 & c_3 & \dots & \dots & g_3\\
+    \dots & \dots   & \dots &\dots &\dots & \dots \\
+    \dots & \dots & \dots &a_{n-2} &b_{n-1}& c_{n-1} & g_{n-1}\\
+    \dots & \dots & \dots & \dots &a_{n-1} & b_n & g_n\\
+  \end{bmatrix}
+\end{equation}
+where $\tilde{b}_2 = b_2 - \left(a_1/\tilde{b}_1\right)c_1$ and $\tilde{g}_2 = g_2-\left(a_1/b_1\right)\tilde{g}_1$. The matrix can be brought to an upper triangular form by repeating this process, i.e
+\begin{equation}
+  \begin{bmatrix}
+    \tilde{b}_1& c_1 & 0 &\dots   & \dots &\dots & \tilde{g}_1\\
+    0 & \tilde{b}_2 & c_2 &\dots &\dots &\dots & \tilde{g}_2\\
+    \dots & 0 & \tilde{b}_3 & c_3 & \dots & \dots & \tilde{g}_3\\
+    \dots & \dots   & \dots &\dots &\dots & \dots \\
+    \dots & \dots & \dots & 0 &\tilde{b}_{n-1}& c_{n-1} & \tilde{g}_{n-1}\\
+    \dots & \dots & \dots & \dots & 0 & \tilde{b}_n & \tilde{g}_n\\
+  \end{bmatrix}
+\end{equation}
+where $\tilde{b}_i = b_i - \left(a_{i-1}/\tilde{b}_{i-1}\right)c_{i-1}$ and $\tilde{g}_i = g_i-\left(a_{i-1}/\tilde{b}_{i-1}\right)\tilde{g}_{i-1}$ for $i = 2,3,\dots,n$. This matrix can be brought to reduced row echelon form by dividing the lower row by $\tilde{b}_n$ (the $n$'th element of the solution is then given by $u_n = \tilde{g}_n/\tilde{b}_n$), and subtracting $c_{n-1}$ times this line from the line above it; dividing this line by $\tilde{b}_{n-1}$ then gives the $\left(n-1\right)$'th element of the solution; $u_{n-1} = \left(\tilde{g}_{n-1}-c_{n-1}u_n\right)/\tilde{b}_{n-1}$. Repeating this process brings the matrix to the form
+\begin{equation}
+  \begin{bmatrix}
+    1 & 0 & 0 &\dots   & \dots &\dots & u_1\\
+    0 & 1 & 0 &\dots &\dots &\dots & u_2\\
+    \dots & 0 & 1 & 0 & \dots & \dots & u_3\\
+    \dots & \dots   & \dots &\dots &\dots & \dots \\
+    \dots & \dots & \dots & 0 &1& 0 & u_{n-1}\\
+    \dots & \dots & \dots & \dots & 0 & 1 & u_n\\
+  \end{bmatrix}
+\end{equation}
+where $u_i = \left(\tilde{g}_i-c_iu_{i+1}\right)/\tilde{b}_i$ for $i= 1,2,\dots,n-1$. Given vectors $\vec{a}$, $\vec{b}$, $\vec{c}$ and $\vec{g}$, the solution $\vec{u}$ can thus be found by the following two-step algorithm:
+\paragraph{Forward substitution (general):}
+\begin{equation}
+  \tilde{b}_1 = b_1;\text{ }\tilde{g}_1 = g_1
+\end{equation}
+For $i = 2,3,\dots,n$:
+\begin{align}
+  \tilde{b}_i &= b_i - \frac{a_{i-1}}{\tilde{b}_{i-1}}c_{i-1} \\
+  \tilde{g}_i &= g_i-\frac{a_{i-1}}{\tilde{b}_{i-1}}\tilde{g}_{i-1}
+\end{align}
+\paragraph{Backward substitution (general):}
+\begin{equation}
+  u_n = \frac{\tilde{g}_n}{\tilde{b}_n}
+\end{equation}
+For $i = n-1, n-2, \dots, 1$:
+\begin{equation}
+  u_i = \frac{\tilde{g}_i-c_iu_{i+1}}{\tilde{b}_i}
+\end{equation}
+When programming, this requires $8n$ floating-point operations (if the factor $a_{i-1}/\tilde{b}_{i-1}$ is calculated only once per $i$) (not exactly, but for large $n$ the error is negligible). I implemented this algorithm in C++ for $n = 10,100,1000,\dots,10^7$ and wrote the solution (for $n=10$, $n=100$ and $n=1000$), maximum relative error and time elapsed running the algorithm to files.
+\subsection{Specialization of the algorithm}
+
+
 \begin{thebibliography}{}
   \bibitem{assignment}
     Assignment text for project 1 in FYS3150/FYS4150,
