@@ -4,8 +4,9 @@
 #include <iomanip>
 #include <cmath>
 #include <string>
-#include "time.h"
+#include <chrono>
 using namespace std;
+using namespace std::chrono;
 using namespace arma;
 
 ofstream ofile;
@@ -39,7 +40,7 @@ int main(int argc, char *argv[]){
     //Setup of variables. All arrays are set to length n+2 for convenience,
     //(so that the relevant elements have indices 1-n)even though for some
     //the first/last elements are not used
-    clock_t start, finish;
+    time_point<high_resolution_clock> start, finish;
     double h = 1.0/(n+1);                  //step size
     double h2 = h*h;
     double *a = new double[n+2];       //"below" diagonal
@@ -66,7 +67,7 @@ int main(int argc, char *argv[]){
     //General tridiagonal solver:
     if (solution_method == 1){
       b_new[1] = b[1]; g_new[1] = g[1];
-      start = clock();
+      start = high_resolution_clock::now();
       for (int i = 2; i <= n; i++){
         double a_b = a[i-1]/b_new[i-1];
         b_new[i] = b[i] - a_b*c[i-1];
@@ -82,7 +83,7 @@ int main(int argc, char *argv[]){
     else if (solution_method == 2){
       for (int i = 1; i <= n; i++) b_new[i] = (i+1.)/i;
       g_new[1] = g[1];
-      start = clock();
+      start = high_resolution_clock::now();
       for (int i = 2; i <= n; i++){
         g_new[i] = g[i] + g_new[i-1]/b_new[i-1];
       }
@@ -106,9 +107,8 @@ int main(int argc, char *argv[]){
         }
         g_vec[i] = g[i+1];
       }
-      start = clock();
+      start = high_resolution_clock::now();
       lu(L, U, P, A);
-      //if (n == 1) cout << P << endl;
       vec y = solve(L,g_vec);
       vec solution = solve(U,y);
       for (int i = 1; i <= n; i++){
@@ -120,8 +120,9 @@ int main(int argc, char *argv[]){
       "tridiagonal case, 2 for special, 3 for LU decomp." << endl;
       exit(1);
     }
-    finish = clock();
-    t[m-1] = (finish-start)/double(CLOCKS_PER_SEC);
+    finish = high_resolution_clock::now();
+    duration<double> elapsed = finish-start;
+    t[m-1] = elapsed.count();
     double *rel_err = new double[n+2];
     //Writing solution to file (for m up to 3):
     if(m <= 3){
