@@ -15,4 +15,4 @@
 *.cxxflags
 *.files
 *.includes
-*.creator
+*.creator*
