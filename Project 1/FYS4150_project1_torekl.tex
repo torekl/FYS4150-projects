@@ -111,7 +111,7 @@ where $\tilde{b}_i = b_i - \left(a_{i-1}/\tilde{b}_{i-1}\right)c_{i-1}$ and $\ti
     \dots & \dots & \dots & \dots & 0 & 1 & u_n\\
   \end{bmatrix}
 \end{equation}
-where $u_i = \left(\tilde{g}_i-c_iu_{i+1}\right)/\tilde{b}_i$ for $i= 1,2,\dots,n-1$. Given vectors $\vec{a}$, $\vec{b}$, $\vec{c}$ and $\vec{g}$, the solution $\vec{u}$ can thus be found by the following two-step algorithm:
+where $u_i = \left(\tilde{g}_i-c_iu_{i+1}\right)/\tilde{b}_i$ for $i= 1,2,\dots,n-1$ (note that this is not the full solution as the interval is divided into $n+2$ points; however the end points $u_0$ and $u_{n+1}$ are both known from the boundary conditions to be zero). Given vectors $\vec{a}$, $\vec{b}$, $\vec{c}$ and $\vec{g}$, the solution $\vec{u}$ can thus be found by the following two-step algorithm:
 \paragraph{Forward substitution (general):}
 \begin{equation}
   \tilde{b}_1 = b_1;\text{ }\tilde{g}_1 = g_1
@@ -129,9 +129,26 @@ For $i = n-1, n-2, \dots, 1$:
 \begin{equation}
   u_i = \frac{\tilde{g}_i-c_iu_{i+1}}{\tilde{b}_i}
 \end{equation}
-When programming, this requires $8n$ floating-point operations (if the factor $a_{i-1}/\tilde{b}_{i-1}$ is calculated only once per $i$) (not exactly, but for large $n$ the error is negligible). I implemented this algorithm in C++ for $n = 10,100,1000,\dots,10^7$ and wrote the solution (for $n=10$, $n=100$ and $n=1000$), maximum relative error and time elapsed running the algorithm to files.
+When programming, this requires $8n$ floating-point operations (if the factor $a_{i-1}/\tilde{b}_{i-1}$ is calculated only once per $i$) (not exactly, but for large $n$ the error is negligible). I implemented this algorithm in C++ (with $a_i = c_i = -1$, $b_i = 2$ and $g_i = h^2f\left(x_i\right)$ with $f$ as specified above)for $n = 10,100,1000,\dots,10^7$ and wrote the solution (for $n=10$, $n=100$ and $n=1000$), maximum relative error and time elapsed running the algorithm to files.
 \subsection{Specialization of the algorithm}
-
+In this case all $a_i = c_i = -1$, and $b_i = 2$. Thus the algorithm as described above can be specialized; first of all, $\tilde{b}_i = \left(i+1\right)/i$ (this can be proved by induction, from $\tilde{b}_i = 2-1/\tilde{b}_{i-1}$). If these are pre-calculated they will not contribute to the number of floating point operations of the algorithm. A specialized version of the previously described algorithm is then:
+\paragraph{Forward substitution (specialized):}
+\begin{equation}
+  \tilde{b}_i = \frac{i+1}{i} \text{ for }i=1,2,\dots,n;\text{ }\tilde{g}_1 = g_1
+\end{equation}
+For $i = 2,3,\dots,n$:
+\begin{equation}
+  \tilde{g}_i = g_i+\frac{\tilde{g}_{i-1}}{\tilde{b}_{i-1}}
+\end{equation}
+\paragraph{Backward substitution (specialized):}
+\begin{equation}
+  u_n = \frac{\tilde{g}_n}{\tilde{b}_n}
+\end{equation}
+For $i = n-1, n-2, \dots, 1$:
+\begin{equation}
+  u_i = \frac{\tilde{g}_i+u_{i+1}}{\tilde{b}_i}
+\end{equation}
+Not counting the pre-calculated variables, this requires $4n$ floating-point operations. Naively one would then expect this algorithm to be roughly twice as fast as the general one; however this is not the case, as the number of memory reads/writes is the same for both cases. Thus this algorithm should be faster, but not quite twice as fast. I implemented this algorithm in C++ for the same parameters as the general one, and compared the results (in particular the run-time) to those from the general algorithm.
 
 \begin{thebibliography}{}
   \bibitem{assignment}
