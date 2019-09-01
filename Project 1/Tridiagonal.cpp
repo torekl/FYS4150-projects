@@ -96,7 +96,7 @@ int main(int argc, char *argv[]){
     //LU decomposition:
     else if (solution_method == 3){
       mat A(n,n);
-      mat L, U, P;
+      mat L, U;
       vec g_vec(n);
       //setup of A and g:
       for (int i = 0; i <= n-1; i++){
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]){
         g_vec[i] = g[i+1];
       }
       start = high_resolution_clock::now();
-      lu(L, U, P, A);
+      lu(L, U, A);
       vec y = solve(L,g_vec);
       vec solution = solve(U,y);
       for (int i = 1; i <= n; i++){

@@ -84,7 +84,7 @@ For the moment, I am not making any assumptions about the values of $a_i$, $b_i$
     \tilde{b}_1& c_1 & 0 &\dots   & \dots &\dots & \tilde{g}_1\\
     0 & \tilde{b}_2 & c_2 &\dots &\dots &\dots & \tilde{g}_2\\
     \dots & a_2 & b_3 & c_3 & \dots & \dots & g_3\\
-    \dots & \dots   & \dots &\dots &\dots & \dots \\
+    \dots & \dots   & \dots &\dots &\dots & \dots \dots \\
     \dots & \dots & \dots &a_{n-2} &b_{n-1}& c_{n-1} & g_{n-1}\\
     \dots & \dots & \dots & \dots &a_{n-1} & b_n & g_n\\
   \end{bmatrix}
@@ -95,7 +95,7 @@ where $\tilde{b}_2 = b_2 - \left(a_1/\tilde{b}_1\right)c_1$ and $\tilde{g}_2 = g
     \tilde{b}_1& c_1 & 0 &\dots   & \dots &\dots & \tilde{g}_1\\
     0 & \tilde{b}_2 & c_2 &\dots &\dots &\dots & \tilde{g}_2\\
     \dots & 0 & \tilde{b}_3 & c_3 & \dots & \dots & \tilde{g}_3\\
-    \dots & \dots   & \dots &\dots &\dots & \dots \\
+    \dots & \dots   & \dots &\dots &\dots & \dots \dots \\
     \dots & \dots & \dots & 0 &\tilde{b}_{n-1}& c_{n-1} & \tilde{g}_{n-1}\\
     \dots & \dots & \dots & \dots & 0 & \tilde{b}_n & \tilde{g}_n\\
   \end{bmatrix}
@@ -106,7 +106,7 @@ where $\tilde{b}_i = b_i - \left(a_{i-1}/\tilde{b}_{i-1}\right)c_{i-1}$ and $\ti
     1 & 0 & 0 &\dots   & \dots &\dots & u_1\\
     0 & 1 & 0 &\dots &\dots &\dots & u_2\\
     \dots & 0 & 1 & 0 & \dots & \dots & u_3\\
-    \dots & \dots   & \dots &\dots &\dots & \dots \\
+    \dots & \dots   & \dots &\dots &\dots & \dots & \dots\\
     \dots & \dots & \dots & 0 &1& 0 & u_{n-1}\\
     \dots & \dots & \dots & \dots & 0 & 1 & u_n\\
   \end{bmatrix}
@@ -149,15 +149,44 @@ For $i = n-1, n-2, \dots, 1$:
   u_i = \frac{\tilde{g}_i+u_{i+1}}{\tilde{b}_i}
 \end{equation}
 Not counting the pre-calculated variables, this requires $4n$ floating-point operations. Naively one would then expect this algorithm to be roughly twice as fast as the general one; however this is not the case, as the number of memory reads/writes is the same for both cases. Thus this algorithm should be faster, but not quite twice as fast. I implemented this algorithm in C++ for the same parameters as the general one, and compared the results (in particular the run-time) to those from the general algorithm.
+\subsection{Solution by LU decomposition}
+For the present problem the algorithms as described above are the most efficient; by exploiting the tridiagonal nature of the matrix they only require a number of floating-point operations which is proportional to $n$. They also use relatively little memory; as only the non-zero elements of the matrix are stored the number of stored values is also proportional to $n$. However, for a more general matrix equation $A\vec{u} = \vec{g}$ more generally applicable methods must be used, such as LU decomposition. In such methods the entire $n\times n$ matrix is used, so that the number of stored values is proportional to $n^2$. \par
+In LU decomposition, the matrix $A$ is written as a product of a lower and an upper triangular matrix, $A=LU$, where \cite{lecturenotes}
+\begin{align}
+  L_{ij} &=
+  \begin{cases}
+    l_{ij} & \text{for }i>j \\
+    1 & \text{for } i = j \\
+    0 & \text{for } i < j
+  \end{cases} \\
+  U_{ij} &=
+  \begin{cases}
+    u_{ij} & \text{for } i \leq j \\
+    0 & \text{for } i > j
+  \end{cases}
+\end{align}
+This decomposition is possible if $A$ is non-singular, i.e. $\text{det}\left(A\right) \neq 0$. When this decomposition is obtained the matrix equation $A\vec{u} = \vec{g}$ can be solved in two steps (which are easier to solve than the original one due to the shape of the $L$ and $U$ matrices): First by solving $L\vec{y} = \vec{g}$ for $\vec{y}$, then solving $U\vec{u} = \vec{y}$ \cite{lecturenotes}. I used this method in C++ (using the library Armadillo\cite{armadillo1}\cite{armadillo2} for LU decomposition and solving the equations) for $n=10, \dots, 10^4$ (higher powers of 10 are not possible; $n=10^5$ would require $10^{10}$ numbers to be stored, i.e. roughly $80\text{GB}$ of memory), and compared the CPU time with the previous algorithms.\par
+\textbf{ADD CALCULATION OF FLOATING-POINT OPERATIONS}!!
+
 
 \begin{thebibliography}{}
   \bibitem{assignment}
     Assignment text for project 1 in FYS3150/FYS4150,
-    Dept. of Physics, University of Oslo, Norway
+    Department of Physics, University of Oslo, Norway
 
   \bibitem{lecturenotes}
     Hjorth-Jensen, Morten,
     2015,
     Computational Physics - lecture notes
+
+  \bibitem{armadillo1}
+    Sanderson, Conrad and Curtin, Ryan,
+    Armadillo: a template-based C++ library for linear algebra,
+    Journal of Open Source Software, Vol. 1, pp. 26, 2016
+
+  \bibitem{armadillo2}
+    Sanderson, Conrad and Curtin, Ryan,
+    Practical Sparse Matrices in C++ with Hybrid Storage and Template-Based Expression Optimisation,
+    Mathematical and Computational Applications, Vol. 24, No. 3, 2019
 \end{thebibliography}
 \end{document}
