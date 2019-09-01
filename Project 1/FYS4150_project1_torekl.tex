@@ -12,6 +12,11 @@
 \usepackage{mathtools}
 \usepackage{dsfont}
 \usepackage{gensymb}
+\usepackage{multirow}
+\usepackage{booktabs}
+\renewcommand{\arraystretch}{1.2}
+\floatstyle{plaintop}
+\restylefloat{table}
 \urlstyle{sf}
 \def\doubleunderline#1{\underline{\underline{#1}}}
 \def\unit#1{\vec{\hat{#1}}}
@@ -54,6 +59,7 @@ for $f\left(x\right) = 100e^{-10x}$ for $x\in \left[0,1\right]$ with the boundar
 The first step is dividing this interval into a discrete set of points $x_i$ for $i = 0,1,2,\dots,n+1$, where $x_0 = 0$ and $x_{n+1} = 1$. Thus the step size is given by $h = x_{i+1}-x_i = 1/\left(n+1\right)$. The second derivative can be approximated by \cite{lecturenotes}
 \begin{equation}
   u''_i \approx \frac{u_{i-1}-2u_i+u_{i+1}}{h^2}
+  \label{eq:2ndderivative}
 \end{equation}
 (obtained by manipulating the Taylor expansion of $u\left(x\right)$) where the error is of order $h^2$. Here $u_i \equiv u\left(x_i\right)$, etc. Inserting this into equation \ref{eq:poisson1d} gives
 \begin{equation*}
@@ -167,6 +173,54 @@ In LU decomposition, the matrix $A$ is written as a product of a lower and an up
 \end{align}
 This decomposition is possible if $A$ is non-singular, i.e. $\text{det}\left(A\right) \neq 0$. When this decomposition is obtained the matrix equation $A\vec{u} = \vec{g}$ can be solved in two steps (which are easier to solve than the original one due to the shape of the $L$ and $U$ matrices): First by solving $L\vec{y} = \vec{g}$ for $\vec{y}$, then solving $U\vec{u} = \vec{y}$ \cite{lecturenotes}. I used this method in C++ (using the library Armadillo\cite{armadillo1}\cite{armadillo2} for LU decomposition and solving the equations) for $n=10, \dots, 10^4$ (higher powers of 10 are not possible; $n=10^5$ would require $10^{10}$ numbers to be stored, i.e. roughly $80\text{GB}$ of memory), and compared the CPU time with the previous algorithms.\par
 \textbf{ADD CALCULATION OF FLOATING-POINT OPERATIONS}!!
+\section{Results}
+The numerical solution (obtained from the general tridiagonal matrix algorithm), compared to the exact solution from equation \ref{eq:u_exact} is shown for $n=1$, $n=10$ and $n=1000$ in figure \ref{fig:general_plot}. The CPU time used and the maximum relative error (i.e. the maximum value of $\norm{\left(u^*_i-u_i\right)/u_i}$ where $\vec{u}^*$ and $\vec{u}$ are the numerical and the exact solutions, respectively) in the different solution methods for different values of $n$ is shown in table \ref{tab:mainresults}. The results here are largely as expected; the CPU time of both tridiagonal solvers are roughly proportional to $n$, while for the LU solver it is proportional to somewhere between $n^2$ and $n^3$ (this is not the case for $n=10$, probably due to some "minimum time" to run the different functions; due to the relatively small size of this matrix it is likely that the run-time cannot be reduced much more). One can also see a general trend indicating that the specialized version of the tridiagonal algorithm is somewhat faster than the general one, but not quite twice as fast, as I discussed previously. \par
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.96\linewidth]{general_plot.pdf}
+  \caption{Numerical solution (from the general tridiagonal matrix algorithm) for $n=1$, $n=10$ and $n=1000$, compared to the exact solution.}
+  \label{fig:general_plot}
+\end{figure}
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{c c c c c c c} \toprule
+    & \multicolumn{2}{c}{Tridiagonal (general)} & \multicolumn{2}{c}{Tridiagonal (special)} & \multicolumn{2}{c}{LU decomposition}\\\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+    $n$ & t [s] & Rel. error & t [s] & Rel. err. & t [s] & Rel. err. \\\midrule
+    10 & $2.32\mathrm{e}{-7}$ & 0.0661 & $3.23\mathrm{e}{-7}$ & 0.0661 & $1.10\mathrm{e}{-4}$ & 0.0661 \\
+    $10^2$ & $1.95\mathrm{e}{-6}$ & $8.17\mathrm{e}{-4}$ & $1.84\mathrm{e}{-6}$ & $8.17\mathrm{e}{-4}$ & $7.99\mathrm{e}{-4}$ & $8.17\mathrm{e}{-4}$ \\
+    $10^3$ & $2.39\mathrm{e}{-5}$ & $8.32\mathrm{e}{-6}$ & $2.12\mathrm{e}{-5}$ & $8.32\mathrm{e}{-6}$ & 0.0594 & $8.32\mathrm{e}{-6}$ \\
+    $10^4$ & $3.07\mathrm{e}{-4}$ & $8.33\mathrm{e}{-8}$ & $2.66\mathrm{e}{-4}$ & $8.33\mathrm{e}{-8}$ & 13.3 & $8.33\mathrm{e}{-8}$ \\
+    $10^5$ & $3.13\mathrm{e}{-3}$ & $1.44\mathrm{e}{-9}$ & $2.61\mathrm{e}{-3}$ & $8.33\mathrm{e}{-10}$ & - & - \\
+    $10^6$ & 0.0384 & $8.40 \mathrm{e}{-7}$ & 0.0278 & $6.87 \mathrm{e}{-11}$ & - & - \\
+    $10^7$ & 0.369 & $2.98 \mathrm{e}{-6}$ & 0.266 & $8.13 \mathrm{e}{-10}$ & - & - \\\bottomrule
+  \end{tabular}
+  \caption{Comparison of the CPU time used and the maximum relative error for the general and specialized tridiagonal matrix algorithms, and the general LU decomposition method, for various numbers of integration points $n+2$.}
+  \label{tab:mainresults}
+\end{table}
+\subsection{Round-off errors}
+The errors in table \ref{tab:mainresults} also agree with the previous discussion; for small $n$ the errors are identical, i.e. all methods give the same results, however as $n$ grows large the specialized tridiagonal algorithm gives significantly more precise results. This is, as  I discussed in the previous section, due to the fact that in the specialized version all the $\tilde{b}_i$'s are calculated exactly, before the main part of the algorithm, whereas in the general version they are calculated in the main part of the algorithm, by repeated subtractions. When this process is repeated a very large number of times small round-off errors in the values of $\tilde{b}_i$ can begin to add up, which by extension leads to errors in the solution. \par
+The sizes of the errors for small $n$ also behave as expected from the approximation for the second derivative I used; the leading term of the error in equation \ref{eq:2ndderivative} is of order $h^2$\cite{lecturenotes} ($h=1/\left(n+1\right)$), and one can indeed see that for small $n$ the maximum relative error increases roughly by a factor $100$ every time $n$ increases by a factor of 10. However as $n$ grows larger this trend stops, and the error starts to rise again. To examine this, I compared the logarithm of the maximum relative error (i.e. the maximum value of $\epsilon_i = \log_{10}{\norm{\left(u^*_i-u_i\right)/u_i}}$) to the logarithm of $h$, for the specialized tridiagonal algorithm. The results are shown in table \ref{tab:error_tab} and figure \ref{fig:error_plot}.
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{c c} \toprule
+    $\log_{10}{\left(h\right)}$ & $\epsilon$ \\\midrule
+    -1.0414 & -1.1797 \\
+    -2.0043 & -3.0880 \\
+    -3.0004 & -5.0801 \\
+    -4.0000 & -7.0793 \\
+    -5.0000 & -9.0791 \\
+    -6.0000 & -10.1628 \\
+    -7.0000 & -9.0900\\\bottomrule
+  \end{tabular}
+  \caption{$\epsilon \equiv \text{max}\left(\epsilon_i\right)$ (maximum value of the logarithm of the relative error from the specialized tridiagonal algorithm) vs the logarithm of the step size $h$.}
+  \label{tab:error_tab}
+\end{table}
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.84\linewidth]{error_plot.pdf}
+  \caption{$\epsilon \equiv \text{max}\left(\epsilon_i\right)$ (maximum value of the logarithm of the relative error from the specialized tridiagonal algorithm) plotted against the logarithm of the step size $h$.}
+  \label{fig:error_plot}
+\end{figure}
 
 
 \begin{thebibliography}{}
