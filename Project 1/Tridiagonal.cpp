@@ -142,6 +142,7 @@ int main(int argc, char *argv[]){
       }
       ofile.close();
     }
+    //Calculating the error for m > 3:
     else{
       for (int i = 0; i <= n+1; i++){
         double err = u_num[i]-u_exact[i];
