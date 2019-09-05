@@ -139,7 +139,7 @@ For $i = n-1, n-2, \dots, 1$:
 \begin{equation}
   u_i = \frac{\tilde{g}_i-c_iu_{i+1}}{\tilde{b}_i}
 \end{equation}
-When programming, this requires $8n$ floating point operations (if the factor $a_{i-1}/\tilde{b}_{i-1}$ is calculated only once per $i$) (not exactly, but for large $n$ the error is negligible). I implemented this algorithm in C++ (with $a_i = c_i = -1$, $b_i = 2$ and $g_i = h^2f\left(x_i\right)$ with $f$ as specified above)for $n = 10,100,1000,\dots,10^7$ and wrote the solution (for $n=10$, $n=100$ and $n=1000$), maximum relative error and time elapsed running the algorithm to files.
+This algorithm is outlined in \cite{LUslides}. When programming, this requires $8n$ floating point operations (if the factor $a_{i-1}/\tilde{b}_{i-1}$ is calculated only once per $i$) (not exactly, but for large $n$ the error is negligible). I implemented this algorithm in C++ (with $a_i = c_i = -1$, $b_i = 2$ and $g_i = h^2f\left(x_i\right)$ with $f$ as specified above)for $n = 10,100,1000,\dots,10^7$ and wrote the solution (for $n=10$, $n=100$ and $n=1000$), maximum relative error and time elapsed running the algorithm to files.
 \subsection{Specialization of the algorithm}
 In this case all $a_i = c_i = -1$, and $b_i = 2$. Thus the algorithm as described above can be specialized; first of all, $\tilde{b}_i = \left(i+1\right)/i$ (this can be proved by induction, from $\tilde{b}_i = 2-1/\tilde{b}_{i-1}$). If these are pre-calculated they will not contribute to the number of floating point operations of the algorithm. This can also improve precision, as all elements are calculated directly as opposed to from repeated subtractions in the general method; for large $n$ these repeated subtractions can lead to round-off errors building up. A specialized version of the previously described algorithm is then:
 \paragraph{Forward substitution (specialized):}
@@ -177,6 +177,8 @@ In LU decomposition, the matrix $A$ is written as a product of a lower and an up
 \end{align}
 This decomposition is possible if $A$ is non-singular, i.e. $\text{det}\left(A\right) \neq 0$. When this decomposition is obtained the matrix equation $A\vec{u} = \vec{g}$ can be solved in two steps (which are easier to solve than the original one due to the shape of the $L$ and $U$ matrices): First by solving $L\vec{y} = \vec{g}$ for $\vec{y}$, then solving $U\vec{u} = \vec{y}$ \cite{lecturenotes}. I used this method in C++ (using the library Armadillo\cite{armadillo1}\cite{armadillo2} for LU decomposition and solving the equations) for $n=10, \dots, 10^4$ (higher powers of 10 are not possible; $n=10^5$ would require $10^{10}$ numbers to be stored, i.e. roughly $80\text{GB}$ of memory), and compared the CPU time with the previous algorithms.\par
 The algorithm for obtaining the LU decomposition of a matrix requires $\sim n^3$ floating point operations, and solving a matrix equation with an LU decomposed matrix requires $\sim n^2$ such operations\cite{lecturenotes}. Thus the CPU time used for this algorithm should roughly be proportional to $n^3$.
+\subsection{Programs}
+All programs used for solving the equation with these three algorithms and plotting the results, as well as the results used referred to later in this text, can be seen at \url{https://github.com/torekl/FYS4150-projects}.
 \section{Results}
 The numerical solution (obtained from the general tridiagonal matrix algorithm), compared to the exact solution from equation \ref{eq:u_exact} is shown for $n=1$, $n=10$ and $n=1000$ in figure \ref{fig:general_plot}. The CPU time used and the maximum relative error (i.e. the maximum value of $\norm{\left(u^*_i-u_i\right)/u_i}$ where $\vec{u}^*$ and $\vec{u}$ are the numerical and the exact solutions, respectively) in the different solution methods for different values of $n$ is shown in table \ref{tab:mainresults}. The results here are largely as expected; even for relatively small $n$ the errors are quite small for all three methods, meaning that they are all able to reproduce the known solution rather effectively (already for $n=100$ it is hard to separate the numerical solution from the exact one in figure \ref{fig:general_plot}). \par
 Furthermore, the CPU time of both tridiagonal solvers are roughly proportional to $n$, while for the LU solver it is proportional to somewhere between $n^2$ and $n^3$ for larger n; this is not the case for $n=10$, probably due to some "minimum time" to run the different functions; due to the relatively small size of this matrix it is likely that the run-time cannot be reduced much more. This is likely also the reason why the CPU time still does not increase as quickly as one would expect for $\sim n^3$ floating point operations even for large $n$. One can also see a general trend indicating that the specialized version of the tridiagonal algorithm is somewhat faster than the general one, but not quite twice as fast, as I discussed previously. \par
@@ -241,6 +243,10 @@ I have also demonstrated the effect of round-off errors as the number of integra
     2015,
     Computational Physics - lecture notes
 
+  \bibitem{LUslides}
+    Hjorth-Jensen, Morten,
+    2018,
+    Computational Physics Lectures: Linear Algebra methods
   \bibitem{armadillo1}
     Sanderson, Conrad and Curtin, Ryan,
     Armadillo: a template-based C++ library for linear algebra,
