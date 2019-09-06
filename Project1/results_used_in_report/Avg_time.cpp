@@ -38,7 +38,7 @@ int main(int argc, char *argv[]){
   ofile << setiosflags(ios::showpoint);
   ofile << "  n:           t [s]:" << endl;
   for (int m=1; m <=  7; m++){
-    double *row_m = t_general.colptr(m-1);
+    double *row_m = t_general.colptr(m-1); //Times for 10^m integration points
     double t_avg = avg(row_m,10);
     ofile << "10^" << m;
     ofile << setw(16) << setprecision(6) << t_avg << endl;
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]){
   ofile << setiosflags(ios::showpoint);
   ofile << "  n:           t [s]:" << endl;
   for (int m=1; m <=  7; m++){
-    double *row_m = t_special.colptr(m-1);
+    double *row_m = t_special.colptr(m-1); //Times for 10^m integration points
     double t_avg = avg(row_m,10);
     ofile << "10^" << m;
     ofile << setw(16) << setprecision(6) << t_avg << endl;
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]){
   ofile << setiosflags(ios::showpoint);
   ofile << "  n:           t [s]:" << endl;
   for (int m=1; m <=  4; m++){
-    double *row_m = t_LU.colptr(m-1);
+    double *row_m = t_LU.colptr(m-1); //Times for 10^m integration points
     double t_avg = avg(row_m,10);
     ofile << "10^" << m;
     ofile << setw(16) << setprecision(6) << t_avg << endl;
