@@ -18,7 +18,7 @@ inline double u_analytic(double x){return (exp(-10.0)-1.0)*x+1.0-exp(-10.0*x);}
 int main(int argc, char *argv[]){
   int max_m;            //maximum value of m (n = 10^m)
   string fname;         //beginning of filename; filenames will be "fname_m"
-  int solution_method;  //1 for general method, 2 for special case
+  int solution_method;  //1 for general tridiag., 2 for specialized, 3 for LU
   if(argc <= 3){
     cout << "No filename, m and/or solution method; read filename, max. "
     "value of m (n=10^m) and solution method (1 for general tridiagonal "
