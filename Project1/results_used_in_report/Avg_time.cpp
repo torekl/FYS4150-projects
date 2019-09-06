@@ -18,7 +18,7 @@ double avg(double t[],int n){
 int main(int argc, char *argv[]){
   mat t_general(10,7);
   mat t_special(10,7);
-  mat t_LU(10,7);
+  mat t_LU(10,4);
 
   //Times from general algorithm:
   for (int run = 1; run <= 10; run++){
